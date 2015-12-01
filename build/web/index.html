@@ -9,9 +9,19 @@ and open the template in the editor.
         <title>TODO supply a title</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+         <style>
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #map {
+                height: 100%;
+            }
+        </style>
     </head>
     <body>
-        <h1>Collaborative Whiteboard App</h1>
+     <!--   <h1>Collaborative Whiteboard App</h1>
         <table>
         <tr>
             <td>
@@ -42,8 +52,15 @@ and open the template in the editor.
                 </form>
             </td>
         </tr>
-    </table>    
+    </table>-->    
         <script type="text/javascript" src="websocket.js"></script>
         <script type="text/javascript" src="whiteboard.js"></script>
+    	<div style="text-align:center"><button onclick="send_data()">Show nearest neighbour</button>
+	<button onclick="myFunction()">Shaded Reference Points</button></div>
+        <div id="map"></div>
+        
+	<script async defer
+		src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBRdF94t_9r_noRU-5a0D7aimXEtYIRN3E&signed_in=true&callback=initMap">
+	</script>
     </body>
 </html>

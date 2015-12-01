@@ -15,7 +15,17 @@ function getCurrentPos(evt) {
         y: evt.clientY - rect.top
     };
 }
-
+function send_data() {
+    var coordinates = get_coordinates();
+    
+    var json = JSON.stringify({
+        "coords": {
+            "Latitude": coordinates.x,
+            "Longitude": coordinates.y,
+        }
+    });
+    sendText(json);
+}
 function defineImage(evt) {
     var currentPos = getCurrentPos(evt);
 
