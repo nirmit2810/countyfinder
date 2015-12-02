@@ -18,6 +18,7 @@ import javax.websocket.server.ServerEndpoint;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,7 +27,11 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
+import javax.json.Json;
+import javax.json.JsonObject;
+
 
 
 /**
@@ -41,6 +46,9 @@ public class MyWhiteboard {
     @OnMessage
     public void broadcastFigure(Figure figure, Session session) throws IOException, EncodeException {
         System.out.println("broadcastFigure: " + figure);
+        JSONObject coordinates = new JSONObject();
+        JSONArray lat_json = new JSONArray();
+        JSONArray long_json = new JSONArray();
        try {
             FileInputStream in = new FileInputStream("C:\\Users\\Nirmit Shah\\Desktop\\mapsapp_ec504\\location.txt");
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -91,8 +99,15 @@ public class MyWhiteboard {
             while (it.hasNext()) {
                 Map.Entry pair = (Map.Entry) it.next();
                 System.out.println(pair.getKey() + " = " + pair.getValue());
-              
+                String[] latlong = pair.getKey().toString().split(":") ;
+                String lat1 = latlong[1];
+                String long1 = latlong[3];
+                lat_json.add(lat1);
+                long_json.add(long1);                
             }
+            coordinates.put("latitude", lat_json);
+            coordinates.put("longitude", long_json);
+            figure.setJson(Json.createReader(new StringReader(coordinates.toString())).readObject());
             RemoteEndpoint.Basic other = session.getBasicRemote();
             other.sendObject(figure);
         } catch (Exception e) {

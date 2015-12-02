@@ -9,6 +9,11 @@ var wsUri = "ws://" + document.location.host + document.location.pathname + "whi
 var websocket = new WebSocket(wsUri);
 var xlatitude = 39.50;
 var ylongitude = -98.35;
+var mapStuff = {
+    //this is the "global" vars of this code sample as I have love for namespacing my globals
+    theMap : null, // the global var holding the reference to the map
+    markerList : [] // to be an array holding the list of markers
+};
 websocket.onerror = function(evt) { onError(evt) };
 
 function onError(evt) {
@@ -26,13 +31,27 @@ function sendText(json) {
 function onMessage(evt) {
     console.log("received: " + evt.data);
     window.alert("received");
-    window.alert(evt.data); 
+    console.log(evt.data); 
+    var obj = JSON.parse(evt.data);
+    var i;
+    for(i=0; i<obj.latitude.length;i++)
+    {    
+       // console.log(obj.latitude[i]);
+       // console.log(obj.longitude[i]);
+        var myLatLng = {lat: parseFloat(obj.latitude[i]), lng: parseFloat(obj.longitude[i])};
+        var marker = new google.maps.Marker({
+           position: myLatLng,
+           map: mapStuff.theMap,
+           title: obj.latitude[i] + obj.longitude[i] ,
+        });
+         window.alert("created");
+    }
 }
 function get_coordinates(){
     
     return {
         x: xlatitude,
-        y: ylongitude,
+        y: ylongitude
     };
 }
 
@@ -40,15 +59,15 @@ function initMap() {
 
 
     var sai = new google.maps.LatLng(39.50,-98.35);
-    var map = new google.maps.Map(document.getElementById('map'), {
+    mapStuff.theMap = new google.maps.Map(document.getElementById('map'), {
             center: sai,
             zoom: 5
     });
 
     var marker = null;
     var coordInfoWindow = null;
-    google.maps.event.addListener(map, 'click', function (event) {
-
+    google.maps.event.addListener( mapStuff.theMap, 'click', function (event) {
+   
             xlatitude = event.latLng.lat();
             ylongitude = event.latLng.lng();
 
@@ -59,20 +78,20 @@ function initMap() {
                     marker.setMap(null);
             }
 
-            marker = new google.maps.Marker({position: event.latLng, map: map});
+            marker = new google.maps.Marker({position: event.latLng, map:  mapStuff.theMap});
 
             if (coordInfoWindow) {
                     coordInfoWindow.close();
             }
 
             coordInfoWindow = new google.maps.InfoWindow();
-            coordInfoWindow.setContent(createInfoWindowContent(coordinates, map.getZoom()));
+            coordInfoWindow.setContent(createInfoWindowContent(coordinates,  mapStuff.theMap.getZoom()));
             coordInfoWindow.setPosition(coordinates);
-            coordInfoWindow.open(map, marker);
+            coordInfoWindow.open( mapStuff.theMap, marker);
 
             map.addListener('zoom_changed', function() {
-            coordInfoWindow.setContent(createInfoWindowContent(coordinates, map.getZoom()));
-            coordInfoWindow.open(map, marker);
+            coordInfoWindow.setContent(createInfoWindowContent(coordinates,  mapStuff.theMap.getZoom()));
+            coordInfoWindow.open( mapStuff.theMap, marker);
             });
 
     });
@@ -83,7 +102,7 @@ function initMap() {
 function createInfoWindowContent(latLng, zoom) {
 
     return [
-            'LatLng: ' + latLng,
+            'LatLng: ' + latLng
     ].join('<br>');
 }
 

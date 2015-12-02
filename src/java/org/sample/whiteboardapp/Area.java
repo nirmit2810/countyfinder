@@ -49,7 +49,7 @@ public class Area {
 
     @Override
     public String toString() {
-        return "latitude=" + latitude + "longitude=" + longitude ;
+        return "latitude :" + latitude + ": longitude:" + longitude  ;
     }
     
         
