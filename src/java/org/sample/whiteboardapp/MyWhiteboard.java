@@ -49,38 +49,27 @@ public class MyWhiteboard {
     private static LinkedHashMap<Area, Double> map = new LinkedHashMap<Area, Double>();
     public static class Node {
         Object v;
-        protected HPoint k;
         private double point[];
         private Node left;
         private Node right;
+        private String state;
+        private String county;
         public Node() {
             point = new double[2];
             left = null;
             right = null;
         }
-        public Node(double[] point, Node left, Node right) {
+        public Node(double[] point, Node left, Node right, String state,String county)
+        {
             this.point = point;
+            this.state = state;
+            this.county = county;
             this.left = left;
             this.right = right;
         }
     }
     
-    public static class HPoint {
-
-        protected double[] coord;
-
-        protected HPoint(int n) {
-            coord = new double[n];
-        }
-
-        public HPoint(double[] x) {
-
-            coord = new double[2];
-            for (int i = 0; i < 2; ++i)
-                coord[i] = x[i];
-        }
-    }
-
+    ///*** Keysize Exception of Qery point ***///
     public static class KeySizeException extends Exception {
 
         protected KeySizeException() {
@@ -91,77 +80,49 @@ public class MyWhiteboard {
         public static final long serialVersionUID = 2L;
 
     }
-    ///////***********////////////////
-
-    static Node newNode(double arr[]) {
+    
+    ///***New Node***///
+    static Node newNode(double arr[], String state, String county){
         Node temp = new Node();
         temp.point[0] = arr[0];
         temp.point[1] = arr[1];
+        temp.state = state;
+        temp.county = county;
         return temp;
     }
-
-    static Node insertrec(Node root, double point[], int depth) {
+    
+    ///*** Build Tree ***///
+    static Node insertrec(Node root, double point[], int depth, String state, String county) {
         //int cd = depth % 2;
         if (root == null) {
-            return newNode(point);
+            return newNode(point,state,county);
         }
         if (depth == 0) {
             if (point[0] < root.point[0]) {
-                root.left = insertrec(root.left, point, 1 - depth);
+                root.left = insertrec(root.left, point, 1 - depth,state,county);
             } else if (point[0] > root.point[0]) {
-                root.right = insertrec(root.right, point, 1 - depth);
+                root.right = insertrec(root.right, point, 1 - depth,state,county);
             } else {
                 return root;
             }
         } else { // y level
             if (point[1] < root.point[1]) {
-                root.left = insertrec(root.left, point, 1 - depth);
+                root.left = insertrec(root.left, point, 1 - depth,state,county);
             } else if (point[1] > root.point[1]) {
-                root.right = insertrec(root.right, point, 1 - depth);
+                root.right = insertrec(root.right, point, 1 - depth,state,county);
             } else {
                 return root;
             }
         }
         return root;
     }
-
-    static Node insert(Node root, double point[]) {
-        return insertrec(root, point, 0);
+    
+    ///*** Helper Function ***///
+    static Node insert(Node root , double point[],String state, String county){
+        return insertrec(root,point,0,state,county);
     }
-
-    static boolean arePointsSame(double point1[], double point2[]) {
-        // Compare individual pointinate values
-        for (int i = 0; i < 2; ++i)
-            if (point1[i] != point2[i])
-                return false;
-        return true;
-    }
-
-    static boolean Searchrec(Node root, double point[], int depth) {
-        if (root == null)
-            return false;
-        if (arePointsSame(root.point, point))
-            return true;
-        if (depth == 0) {
-            if (point[0] < root.point[0]) {
-                return Searchrec(root.left, point, 1 - depth);
-            } else if (point[0] > root.point[0]) {
-                return Searchrec(root.right, point, 1 - depth);
-            }
-        } else { // y level
-            if (point[1] < root.point[1]) {
-                return Searchrec(root.left, point, 1 - depth);
-            } else if (point[1] > root.point[1]) {
-                return Searchrec(root.right, point, 1 - depth);
-            }
-        }
-        return true;
-    }
-
-    static boolean search(Node root, double point[]) {
-        return Searchrec(root, point, 0);
-    }
-
+    
+    //Distance from current node to query point
     static double Distance(double[] point1, double[] point2) {
         double x1 = Math.toRadians(point1[0]);
         double x2 = Math.toRadians(point2[0]);
@@ -173,49 +134,61 @@ public class MyWhiteboard {
         return D;
     }
 
-    static void searchKDSubtree(PriorityQueue < Double > pq, HashMap < Double, double[] > hm, Node root, double[] Qpoint, int k, int depth) {
+    ///*** Search SubTree for Nearest Neighbors ***///
+    static void searchKDSubtree(PriorityQueue<Double> pq,HashMap<Double,Node> hm, Node root,double[] Qpoint,int k, int depth)
+    {
         Node child = null;
         int dim = depth;
-        double dist = Distance(Qpoint, root.point);
-
-        if (pq.size() < k) {
+        double dist = Distance(Qpoint , root.point);
+       
+        if(pq.size() < k)
+        {   
             pq.add(dist);
-            hm.put(dist, root.point);
-        } else if (dist < pq.peek()) {
+            hm.put(dist,root);
+        }
+        else if (dist < pq.peek())
+        {
             pq.poll();
             pq.add(dist);
-            hm.put(dist, root.point);
+            hm.put(dist,root);
         }
-        if (Qpoint[dim] < root.point[dim]) {
-            if (root.left != null) {
-                searchKDSubtree(pq, hm, root.left, Qpoint, k, (depth + 1) % 2);
+        if(Qpoint[dim] < root.point[dim])
+        {
+            if(root.left != null)
+            {
+                searchKDSubtree(pq,hm, root.left,Qpoint,k,(depth+1) % 2);
                 child = root.right;
             }
-        } else {
-            if (root.right != null) {
-                searchKDSubtree(pq, hm, root.right, Qpoint, k, (depth + 1) % 2);
-                child = root.left;
+        }
+        else
+        {
+            if(root.right != null)
+            {
+                searchKDSubtree(pq, hm, root.right, Qpoint, k, (depth+1) % 2);
+                child = root.left;                
             }
         }
-        if ((pq.size() < k || (Qpoint[dim] - root.point[dim]) < pq.peek()) && child != null) {
-            searchKDSubtree(pq, hm, child, Qpoint, k, (depth + 1) % 2);
-        }
+        if((pq.size() < k || (Qpoint[dim] - root.point[dim]) < pq.peek()) && child != null)
+       {
+           searchKDSubtree(pq, hm,child, Qpoint, k, (depth+1)%2);
+       }  
     }
-
+    
+    ///*** K nearest neighbor search ***///
     static JSONObject findKNN(double[] Qpoint, Node root, int k) {
         JSONObject coordinates = new JSONObject();
         JSONArray lat_json = new JSONArray();
         JSONArray long_json = new JSONArray();
         PriorityQueue < Double > pq = new PriorityQueue < Double > (10, Collections.reverseOrder());
-        HashMap < Double, double[] > hm = new HashMap();
+        HashMap < Double, Node > hm = new HashMap();
         searchKDSubtree(pq, hm, root, Qpoint, k, 0);
         System.out.println(pq.size());
         while (pq.size() != 0) {
-            double[] ans = hm.get(pq.poll());
-            System.out.println(ans[0] + " " + ans[1]);
+            Node ans = hm.get(pq.poll());
+            System.out.println(ans.point[0] + " " + ans.point[1]);
             System.out.println(pq.size());
-            lat_json.add(ans[0]);
-            long_json.add(ans[1]);                
+            lat_json.add(ans.point[0]);
+            long_json.add(ans.point[1]);                
             
         }
         coordinates.put("latitude", lat_json);
@@ -224,7 +197,7 @@ public class MyWhiteboard {
         
     }
 
-    ////////////////// ************ Rectangular Search ************ //////////////////
+    ///*** Rectangular Search ***///
     static void rsearch(double[] lowk, double[] uppk, Node t, Vector < Node > v) {
 
         if (t == null)
@@ -235,7 +208,8 @@ public class MyWhiteboard {
         rsearch(lowk, uppk, t.left, v);
         rsearch(lowk, uppk, t.right, v);
     }
-
+    
+    ///*** Helper Gunction ***///
     static Vector < Node > range(double[] lowk, double[] uppk, Node root) throws KeySizeException {
 
         if (lowk.length != uppk.length) {
@@ -368,13 +342,15 @@ public class MyWhiteboard {
             String strLine;
             while ((strLine = br.readLine()) != null) {
                 String[] line = strLine.split("\t");
+                String state = line[0];
+                String county = line[1];
                 double lat = Double.valueOf(line[2]);
                 double lan = Double.valueOf(line[3]);
                 double[] point = {
                     lat, lan
                 };
                 //System.out.println(point[1]);
-                root = insert(root, point);
+                root = insert(root, point,state,county);
             } in .close();
         } catch (Exception e) {
             e.printStackTrace();
